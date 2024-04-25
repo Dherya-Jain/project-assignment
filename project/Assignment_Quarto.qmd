@@ -1,0 +1,210 @@
+![](UNICEF-logo.png){fig-align="center" width="386"}
+
+---
+title: "***Millions Denied a Basic Right***"
+subtitle: "*Exploring the Global Disparity in Safe Drinking Water and its Importance*"
+author: "***Dherya Jain***"
+date: "**2024-04-24**"
+format: 
+   html:
+     theme: zephyr
+     fontsize: large;
+     backgroundcolor: rgb(255, 255,240);
+     toc: true  
+     mainfont: serif;
+     fontcolor: black;
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+# libraries
+library(tidyverse)
+library(plotly)
+library(maps)
+library(countrycode)
+library(maps)
+library(ggtext)
+
+
+#data
+unicef_indicator_1_new <- read_csv("unicef_indicator_1_new.csv")
+readr::read_csv("unicef_indicator_1_new.csv", show_col_types = FALSE)
+map_world <- map_data("world")
+unicef_metadata_1 <- read_csv("unicef_metadata_1.csv")
+unicef_indicator_1 <- read_csv("unicef_indicator_1.csv")
+
+data_join <-full_join(unicef_indicator_1_new, unicef_metadata_1)
+
+
+data_join_filtered <-full_join(unicef_indicator_1_new, unicef_metadata_1)
+
+```
+
+## ***Introduction***
+
+***Access to safe drinking water is not a privilege, it's a fundamental human right***. Yet, for millions around the world, this essential need remains out of reach. *This dashboard delves into 12 years of data, revealing the stark reality of populations relying on improved, but not necessarily perfect, drinking water sources*. We'll explore not only the proportion of people with access to these sources, but also how this critical **factor impacts a fundamental metric of well-being: life expectancy at birth**. Understanding this connection is vital in the ongoing fight to ensure clean water for all.
+
+![](UN071191.jpg.jpeg){fig-align="center" width="584"}
+
+```{r}
+#| fig-cap: "The world map sheds light on ***access to improved drinking water*** in the year **<span style='color:green'>2022</span>**, but also highlights persistent disparities. It has been observed that the ***<span style='color:orange'>European countries</span>*** exhibit **<span style='color:red'>greater access</span>** to clean drinking water **<span style='color:purple'>compared to</span>** the **<span style='color:brown'>African and some Asian countries</span>**. This underscores both the potential for universal clean water access and the ongoing challenges many nations face in providing this fundamental resource to all their citizens."
+
+#| fig-height: 6
+#| fig-width: 10
+unicef_indicator_1 %>%
+  filter(Year==2022) %>%
+  full_join(map_world, by = c("country"="region")) %>%
+ggplot(aes(x=long, y=lat, group=group, fill=obs_value)) +
+  geom_polygon(color = "grey30")+
+  labs(title = "Proportion of population drinking clean drinking water in the year 2022", 
+       subtitle = "Countries in grey have no data due to mismatch with their names",
+        caption = "Source: UNICEF",
+       x = "longitude",
+       y = "latitude",
+       fill = "Observed Value") +
+  scale_fill_gradient(low= "green", high = "lightblue4", na.value = "grey90")+
+  theme_classic()+
+  theme(plot.title = element_text(size = 14, face = "bold", color = "black", family = "serif", vjust = 1.5),
+        plot.subtitle = element_text(size = 11, color = "black", family = "serif"))
+  
+
+```
+
+```{r}
+#| fig-cap: "The line graph depicts a longitudinal analysis spanning 12 years, showcasing the proportion of the population with access to clean drinking water. Notably, the data reveals a consistent trend wherein ***European countries*** consistently maintain proportions ***exceeding 70%***, contrasting with ***other continents*** whose proportions consistently ***fall below*** this threshold."
+
+#| fig-width: 10
+#| fig-height: 8
+timeseries_plot_1 <- data_join %>%
+  filter(Year >= 2000) %>%
+  ggplot()+
+  aes(Year, obs_value, group = countries, colour = Continent)+
+  labs(title = "Evolution of population drinking clean drinking water over a period of 12 years ", 
+        caption = "Source: UNICEF",
+       x = "Year",
+       y = "% of population drinking clean drinking water",
+       )+
+  theme_classic()+
+  theme(plot.title = element_text(size = 14, face = "bold", color = "black", family = "serif", vjust = 1.5))+
+  geom_line()
+ggplotly(timeseries_plot_1, tooltip = "text")
+```
+
+*Further to analyse the impact of clean drinking water on health, in the next section we will delve into the relationship between clean drinking water and life expectancy at birth.*
+
+![](FIj_iuKXIAA5nKo.jpeg){fig-align="center" width="588"}
+
+## ***Significance of Life Expectancy***
+
+```{r}
+#| fig-cap: "To comprehend the profound influence of clean drinking water on public health, it is imperative to <span style='color:green'>**delve into the life expectancy**</span> rates across various countries. This map serves as a lens through which we can discern the stark disparities in life expectancy among continents. It becomes evident that the <span style='color:blue'>*European continent emerges prominently*</span> in <span style='color:blue'>*comparison to*</span> others, showcasing higher life expectancy rates. Conversely, the <span style='color:red'>*African and certain parts of the Asian continent*</span> exhibit significant <span style='color:red'>*deficits in life expectancy*</span>, mirroring the findings of the earlier map depicting access to clean drinking water. This <span style='color:purple'>***correlation***</span> underscores the robust link between access to <span style='color:purple'>***clean drinking water and life expectancy***</span>. In the subsequent sections of the report, we will embark on a more comprehensive exploration of this vital relationship."
+
+#| fig-height: 6
+#| fig-width: 10
+unicef_metadata_1 %>%
+  filter(Year==2021)%>%
+  full_join(map_world, by = c("country"="region"))%>%
+ggplot(aes(x=long, y=lat, group=group, fill=Life_expectancy_at_birth)) +
+  geom_polygon(color = "grey30")+
+  labs(title = "Life Expectancy at birth (in years) in the year 2021", 
+       subtitle = "Countries in grey have no data due to mismatch with their names",
+        caption = "Source: UNICEF",
+       x = "longitude",
+       y = "latitude",
+       fill = "Observed Value") +
+  scale_fill_gradient(low= "lightgreen", high = "lightblue4", na.value = "grey90")+
+  theme_classic()+
+  theme(plot.title = element_text(size = 17, face = "bold", color = "black", family = "serif", vjust = 1.5),
+        plot.subtitle = element_text(size = 14, color = "black", family = "serif"))
+
+```
+
+```{r}
+#| fig-cap: "The data reveals a persistent disparity in life expectancy between African countries and most other regions over the past twelve years. While *<span style='color:green'>many continents have witnessed significant progress</span>, with <span style='color:orange'>life expectancies exceeding 70 years</span>, <span style='color:red'>African nations haven't quite reached that mark</span>*. In fact, life expectancy in Africa has been below or equal to 60 years, highlighting the need for targeted interventions to improve health outcomes in the region. This emphasizes the unequal progress between continents and underscores the importance of addressing the gap."
+
+
+#|fig-height: 5
+#| fig-width: 30
+data_join %>%
+  filter(Year >= 2010 & Year <= 2021) %>%
+  group_by(Continent, Year) %>%
+  summarise(m_Life_expectancy_at_birth = mean(Life_expectancy_at_birth, na.rm = TRUE)) %>%
+  ggplot() + 
+  aes(x = reorder(Continent, m_Life_expectancy_at_birth), y = m_Life_expectancy_at_birth, fill = Continent) +
+  geom_col() + 
+  facet_wrap(~ Year, nrow = 1) +
+  labs(title = "The Life Expectancy Across Continents by Year",
+       x = "Continent",
+       y = "Life Expectancy at birth (in Years)") +
+  theme_classic()+
+  theme(
+    text= element_text(face = "bold", color = "black", family = "serif", vjust = 1.5, size = 13),
+    axis.text.x = element_blank()
+  ) + 
+  theme(panel.background = element_rect(fill = "grey95"))+ 
+  scale_fill_manual(values= c("red3", "yellow2", "orange", "pink2", "green4", "blue"))
+```
+
+## ***Relationship Between Life Expectancy and Clean Drinking Water***
+
+```{r}
+#| fig-cap: "The above scatterplot is an illustration of the influence of clean drinking water on life expectancy across continents. The data unveils an undeniable connection between <span style='color:brown'><b>high life expectancy</b></span> and <span style='color:green'><i>access to clean drinking water</i></span>. Nations blessed with pristine water sources consistently demonstrate <span style='color:red'><b>greater life expectancy rates at birth</b></span>. This compelling evidence underscores the fundamental role clean water plays in fostering <span style='color:green'><i>longevity and well-being</i></span>. In countries where a high percentage of the population enjoys <span style='color:green'><i>safe water access</i></span>, <span style='color:orange'><b>higher life expectancy</b></span> prevails."
+
+
+data_join_filtered <- data_join %>%
+  filter(Year >= 2010 & Year <= 2021)
+
+ggplot(data_join_filtered) +
+  aes(obs_value, Life_expectancy_at_birth, color = Continent) +
+  geom_point(alpha = .6) +
+  facet_wrap(~ Year, nrow = 1) + 
+  scale_x_continuous(breaks = c(40, 80)) +  
+  labs(y = "Proportion of Population Drinking Clean Water" ,
+       x = "Life Expectancy at birth", 
+       title = "Relation between Clean Drinking Water & Life Expectancy Across Continents") +
+  guides(color = "none") + 
+  theme_classic() +
+  theme(text = element_text(, face = "bold", color = "black", family = "serif", vjust = 1.5, size = 11))+
+  theme(panel.background = element_rect(fill = "grey99"))
+```
+
+```{r}
+#| fig-cap: "The scatterplot is used to conduct a trend analysis to demonstrate the relationship of ***<span style='color:blue'>clean drinking water</span>*** and ***<span style='color:green'>life expectancy at birth</span>***  in the year **<span style='color:red'>2021</span>**. This also data tells us the same story that the ***<span style='color:orange'>European countries</span>*** dominate over the other, but it was important to cover all the available information to prove the relation. From this graph and all the above data studied about ***<span style='color:purple'>life expectancy</span>*** and ***<span style='color:brown'>clean drinking water</span>*** it can be said that ***<span style='color:blue'>clean drinking water</span>*** promotes health and impacts ***<span style='color:green'>life expectancy</span>***."
+
+custom_palette <- c("Asia" = "#1f77f0", 
+                    "Europe" = "#ff7f0e", 
+                    "Africa" = "#2ca02c", 
+                    "Americas" = "#d62711",  
+                    "Oceania" = "#946189")   
+
+
+ggplot(data_join_filtered %>% filter(Year == 2021)) +
+  aes(Life_expectancy_at_birth, obs_value, color = Continent) +
+  geom_point(alpha = 0.8) +
+  geom_smooth(method = "loess", se = FALSE, color = "black") +  
+  scale_color_manual(values = custom_palette)+
+  labs(
+    y = "Life Expectancy at Birth",
+    x = "Proportion of Population Drinking Clean Water", 
+    title = "Impact of Clean Drinking Water on the Life Expectancy Across Continents in year 2021"
+  ) +
+  theme_classic() +
+  theme(
+    text = element_text(face = "bold", color = "black", family = "serif", vjust = 1.5, size= 10),
+    panel.background = element_rect(fill = "grey96")
+  )+
+    guides(color = guide_legend(override.aes = list(size = 4)))
+
+```
+
+## ![](cc.jpg){width="63"} ***Conclusion & Recommendations***
+
+The analysis of 12 years of data underscores the critical importance of access to safe drinking water as a fundamental human right. While positive trends in improved water access are evident globally, persistent disparities remain, particularly in regions such as Africa. *The correlation between high life expectancy and access to clean water highlights the vital role clean water plays in promoting health and longevity*. The case of ***African continent*** illustrates the potential for targeted clean water initiatives to positively impact life expectancy in developing nations. This emphasizes the urgent need for concerted efforts to address inequalities in water access and prioritize initiatives that ensure clean water for all. As we move forward, it is imperative to recognize the interconnectedness of clean water access and overall well-being, working towards a future where every individual has access to this essential resource.
+
+![](WHO_UNICEF.jpg){fig-align="center" width="539" height="529"}
